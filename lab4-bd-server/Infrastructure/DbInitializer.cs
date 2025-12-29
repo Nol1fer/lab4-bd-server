@@ -6,8 +6,8 @@ namespace lab4_bd_server.Infrastructure
 {
     public static class DbInitializer
     {
-        private const string ConnStr = "Host=localhost;Username=admin;Password=password;Database=tictactoe;Port=5432";
-        private const string MasterConnStr = "Host=localhost;Username=admin;Password=password;Database=postgres;Port=5432";
+        private const string ConnStr = "Host=localhost;Username=postgres;Password=mysecretpassword;Database=tictactoe;Port=5433";
+        private const string MasterConnStr = "Host=localhost;Username=postgres;Password=mysecretpassword;Database=tictactoe;Port=5433";
 
         public static void Initialize()
         {
@@ -63,7 +63,7 @@ namespace lab4_bd_server.Infrastructure
                 else
                 {
                     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [Docker] Контейнер не найден, создание (image: postgres)...");
-                    string runArgs = "run --name tictactoe-db -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=password -e POSTGRES_DB=tictactoe -p 5432:5432 -d postgres";
+                    string runArgs = "run --name tictactoe-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=tictactoe -p 5433:5432 -d postgres";
                     Process.Start("docker", runArgs)?.WaitForExit();
                 }
             }

@@ -7,7 +7,7 @@ namespace lab4_bd_server.Services
 {
     public class OrmService : Orm.OrmBase
     {
-        private const string ConnStr = "Host=localhost;Username=admin;Password=password;Database=tictactoe";
+        private const string ConnStr = "Host=localhost;Username=postgres;Password=mysecretpassword;Database=tictactoe;Port=5433";
 
         private readonly ILogger<OrmService> _logger;
         public OrmService(ILogger<OrmService> logger)
