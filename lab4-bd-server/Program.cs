@@ -146,32 +146,45 @@ app.Run();
 
 static string GetLocalIpAddress()
 {
-    // Ищем среди всех сетевых интерфейсов
-    foreach (var netInterface in NetworkInterface.GetAllNetworkInterfaces())
+    foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
     {
-        // Нас интересуют только работающие интерфейсы (Ethernet или Wi-Fi)
-        if (netInterface.OperationalStatus == OperationalStatus.Up &&
-            (netInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet ||
-             netInterface.NetworkInterfaceType == NetworkInterfaceType.Wireless80211))
-        {
-            var properties = netInterface.GetIPProperties();
-            foreach (var ip in properties.UnicastAddresses)
-            {
-                // Нас интересует только IPv4 и адрес не должен начинаться с 127. (localhost)
-                if (ip.Address.AddressFamily == AddressFamily.InterNetwork &&
-                    !IPAddress.IsLoopback(ip.Address))
-                {
-                    string addr = ip.Address.ToString();
+        // Фильтруем только работающие Ethernet/WiFi адаптеры
+        if (networkInterface.OperationalStatus != OperationalStatus.Up ||
+            (networkInterface.NetworkInterfaceType != NetworkInterfaceType.Wireless80211 &&
+             networkInterface.NetworkInterfaceType != NetworkInterfaceType.Ethernet))
+            continue;
 
-                    // Дополнительная проверка: обычно домашние сети это 192.168.x.x
-                    // Мы игнорируем сети Docker (обычно 172.x.x.x или 192.168.224.x в вашем случае)
-                    if (addr.StartsWith("192.168.0.") || addr.StartsWith("192.168.1."))
-                    {
-                        return addr;
-                    }
+        // Исключаем виртуальные и специфические адаптеры
+        var description = networkInterface.Description.ToLower();
+        if (description.Contains("virtual") ||
+            description.Contains("tailscale") ||
+            description.Contains("tap") ||
+            description.Contains("vpn") ||
+            description.Contains("wsl") ||
+            description.Contains("hyper-v") ||
+            description.Contains("vmware") ||
+            description.Contains("virtualbox"))
+            continue;
+
+        var ipProperties = networkInterface.GetIPProperties();
+        
+        foreach (var ipAddress in ipProperties.UnicastAddresses)
+        {
+            if (ipAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+            {
+                var ip = ipAddress.Address.ToString();
+                
+                // Возвращаем первый не-локальный адрес
+                if (!ip.StartsWith("127.") && 
+                    !ip.StartsWith("169.254.") &&
+                    !ip.StartsWith("192.168.56.") &&
+                    !ip.StartsWith("192.168.137."))
+                {
+                    return ip;
                 }
             }
         }
     }
-    return "localhost"; // Если ничего не нашли
+    
+    return "127.0.0.1";
 }
